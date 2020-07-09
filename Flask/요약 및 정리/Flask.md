@@ -1,4 +1,4 @@
-# Flask
+# 1. Flask
 
 "플라스크 웹 개발" 이라는 책을 읽고 내용을 정리 및 요약한 글 입니다.
 
@@ -127,6 +127,262 @@ def get_user(id):
    	if not user:
         abort(404)
         return '<h1>Hello, %s!' %user.name
+```
+
+
+
+## Template / Render
+
+템플릿은 리퀘스트에서 인식 가능한 동적 파트에 대한 변수들을 포함한 응답 텍스트 파일이다.
+
+변수들을 실제 값으로 바꾸는 프로세스와 최종 응답 문자열을 리턴하는 프로세스를 렌더링이라 한다.
+
+플라스크는 Jinja2라는 강력한 템플릿 엔진을 사용한다.
+
+* hello.py
+
+```python
+from flask import Flask, render_template
+
+@app.route('/user/<name>')
+def user(name):
+    return render_template('user.html',name=name)
+```
+
+* user.html
+
+  ```html
+  <h1>
+      Hello, {{name}}!
+  </h1>
+  ```
+
+### 템플릿 제어 구조
+
+Jinja2는 몇 가지 제어 문자를 제공한다 이 제어 문자는 템플릿의 흐름을 변경하는 데 사용된다.
+
+* if 문
+
+  ```html
+  {% if user %}
+  	Hello, {{name}}!
+  {% else %}
+  	Hello, Stranger!
+  {% endif %}
+  ```
+
+* for 문
+
+  ```html
+  <ul>
+  	{% for comment in comments %}
+  		<li>{{comment}}</li>
+      {% endfor %}
+  </ul>	
+  ```
+
+  
+
+* macro
+
+  함수와 비슷한 기능을 한다.
+
+  ```html
+  {% macro render_comment(comment) %}
+  	<li>comment</li>
+  {% endmacro %}
+  ```
+
+  
+
+* import macro
+
+  매크로를 재사용하기 위해서는 독립적인 파일에 저장해 두고 필요할 떄 템플릿에 임포트한다.
+
+  ```html
+  {% import 'macro.html' as macro %}
+  <ul>
+  	{% for comment in comments %}
+  		{{macro.render_comment(comment)}}
+  	{% endfor %}
+  </Ul>
+  ```
+
+  
+
+* include macro
+
+  여러 위치에 반복되는 템플릿 코드는 별도의 파일에 저장하고 필요할 때 인클루드하여 반복을 피한다.
+
+  ```html
+  {% include 'common.html' %}
+  ```
+
+
+
+* template 상속
+
+  파이썬의 클래스 상속과 비슷하며 import와 include와 같이 코드 재사용의 강력한 기능을 제공한다
+
+  > base 템플릿을 정의했다.
+  
+  ```html
+<html>
+  <head>
+      {% block head %}
+      <title>{% block title %}{% endblock %} - My Application</title>
+      {% endblock %}
+  </head>
+  <body>
+      {% block body %}
+      {% endblock %}
+  </body>
+  </html>
+  ```
+  
+
+
+
+## Error 처리
+
+플라스크에서는 에러에 대하여 커스텀 핸들러를 제공한다.
+
+일반적인 라우터와 마찬가지로 템플릿에 기반을 둔 커스텀 에러 페이지를 정의한다.
+
+
+
+```python
+#클라이언트가 없는 경로를 요청함
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'),404
+
+#처리하지 못하는 예외 발생
+@app.errorhandler(500):
+def internal_server_error(e):
+	return render_template('505.html'),505
+```
+
+
+
+
+
+# 2.Flask 확장
+
+플라스크는 확장할 수 있도록 설계되었다. 데이터베이스 사용자 인증 등과 같은 기능을 확장 가능하다.
+
+플라스크를 위해 특별히 개발된 확장은 flask.ext 네임스페이스에 나타나 있다.
+
+
+
+
+
+## Bootstrap
+
+bootstrap은 트위터에서 제공하는 오픈 소스 프레임워크이며 매력적인 웹 페이지를 생성할 수 있도록 사용자 인터페이스 컴포넌트를 제공한다.
+
+부트스트랩과 어플리케이션을 통합하는 가장 확실한 방법은 템플릿에 모든 변경 사항들을 만들어 두는 것이다.
+
+더 간단한 방법은 Flask-Bootstrap이라는 Flask확장을 사용한다.
+
+```python
+from flask_bootstrap import Bootstrap
+```
+
+> Flask-Bootstrap의 base 템플릿을 상속한 예제
+
+```html
+
+{% extends "bootstrap/base.html" %}
+{% block title %} Flasky {% endblock %}
+{% block navbar %}
+<div class="navbar navbar-inverse" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle"
+            data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Flasky</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/">Home</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Hello, {{name}}!</h1>
+    </div>
+</div>
+{% endblock %}
+```
+
+
+
+## Manager
+
+Manager는 클래스이다. Manage 클래스를 익스포트 하는데 이것은 flask_script에서 임포트된다.
+
+```python
+from flask_script import Manager
+from flask import Flask
+
+app = Flask(__name__)
+manager = Manager(app)
+
+if __name__=='__main__':
+    manager.run()
+    app.run(debug=True)
+```
+
+
+
+Manager의 메인 클래스의 인스턴스는 어플리케이션 인스턴스(app)를 생성자에 인수로 넘김으로 초기화된다.
+
+그리고 생성된 오브젝트는 각 확장에 따라 적절하게 사용된다.
+
+이 경우 서버 스타트업은 manager.run()을 통해 라우트되며 커맨드 라인은 파싱된다.
+
+
+
+* shell : 애플리케이션의 컨텍스트에서 파이썬 쉘 세션을 시작한다
+
+* runserver : 웹 서버를 실행한다
+
+  ```
+  python hello.py runserver	
+  ```
+
+  
+
+## Form 처리
+
+플라스크는 폼을 처리하기 위해서 Flask-WTF 확장을 사용하여 처리한다.
+
+Flask-WTF를 사용할 때 각 웹 폼은 Form 클래스로부터 상속한 클래스에 의해  표현된다.
+
+이 클래스는 폼에 있는 필드의 리스트를 정의하는데 이는 각각 오브젝트로 표현된다.
+
+각 오브젝트는 하나 이상의 검증자가 있어서 사용자가 서브밋한 입력값이 올바른지 체크할 수 있다. 
+
+
+
+```python
+from flask_wtf import Form
+from wtforms import StringField, SubmitField
+from wtforms.validators import Required
+
+class NameForm(Form):
+    name = StringField('What is your name?', validators=[Required()])
+	submit = SubmitField('Submit')
 ```
 
 
