@@ -387,11 +387,32 @@ class NameForm(Form):
 
 
 
+WTForms에서 지원하는 표준 HTML 필드의 리스트 
+
+| 필드타입      | 설명                                      |
+| ------------- | ----------------------------------------- |
+| StringField   | 텍스트 필드                               |
+| TextAreaField | 다중 라인 텍스트 필드                     |
+| PasswordField | 패스워드 텍스트 필드                      |
+| Hiddenfield   | 숨겨진 텍스트 필드                        |
+| DateField     | 주어진 포맷에서 datetime.date 값을 받는다 |
+| BooleanField  | True와 False 값을 갖는 체크박스           |
+| FileField     | 파일 업로드 필드                          |
+| SubmitField   | 폼 서브미션 버튼                          |
+| IntegerField  | 정수값을 받는 텍스트 필드                 |
 
 
 
-
-
+| 검증자      | 설명                                                         |
+| ----------- | ------------------------------------------------------------ |
+| Email       | 이메일 주소를 검증                                           |
+| EqualTo     | 두 필드의 값을 비교, 확인하기 위해 패스워드를 두번 입력하도록 할때 유용 |
+| Length      | 문자열의 길이 검증                                           |
+| NumberRange | 입력한 값이 숫자와 알파벳 범위인지를 검증                    |
+| Optional    | 필드에서 빈 입력을 허용하고, 추가한 검증자를 건너뛴다        |
+| Required    | 필드에서 빈 입력을 허용하지 않는다                           |
+| URL         | URL을 검증                                                   |
+| Regexp      | 정규표현식에 대한 입력을 검증                                |
 
 
 
