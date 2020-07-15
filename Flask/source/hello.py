@@ -1,4 +1,4 @@
-from flask import Flask,make_response,render_template, session, redirect, url_for
+from flask import Flask,make_response,render_template, session, redirect, url_for, flash
 from flask_script import Manager
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
@@ -6,6 +6,8 @@ from datetime import datetime
 from wtforms import StringField, SubmitField
 from wtforms.validators import Required, Email
 from flask_wtf import Form
+from flask_sqlalchemy import SQLAlchemy
+
 
 class NameForm(Form):
     name = StringField('Name', validators=[Required()])
@@ -13,6 +15,10 @@ class NameForm(Form):
     submit = SubmitField('Submit')
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URL'] = 'mysql://root:skyhelp9169@127.0.0.1/dpm'
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+
+db = SQLAlchemy(app)
 bootstrap = Bootstrap(app)
 manager = Manager(app)
 moment = Moment(app)
@@ -27,8 +33,12 @@ def control(user):
 def index():
     form = NameForm()
     if form.validate_on_submit():
+        old_name = session.get('name')
+
         session['name'] = form.name.data
+        form.name.data = ''
         session['email'] = form.email.data
+        form.name.email = ''
         return redirect(url_for('index'))
     return render_template('index.html',form = form, name = session.get('name'), email = session.get('email'))
 

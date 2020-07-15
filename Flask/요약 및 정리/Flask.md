@@ -266,6 +266,43 @@ def internal_server_error(e):
 
 
 
+## 메시지 보내기
+
+로그인에 실패했을 때의 경우 비밀번호가 틀렸다는 메시지를 사용자에게 보낼 필요가 있다. 
+
+이와 같이 메시지를 보내고 싶을 때 flask에는 flash() 함수를 사용하면 된다.
+
+```python
+@app.route('/index', methods=['GET','POST'])
+def index():
+    form = NameForm()
+    if form.validate_on_submit():
+        old_name = session.get('name')
+        if old_name is not None and old_name != form.name.data:
+            flash("You have changed your name")
+        session['name'] = form.name.data
+        session['email'] = form.email.data
+        return redirect(url_for('index'))
+    return render_template('index.html',form = form, name = session.get('name'), email = session.get('email'))
+
+```
+
+
+
+### 메시지 렌더링하기
+
+flash()를 호출하는 것만으로는 메시지를 출력하기에 충분하지 않다. 애플리케이션에서 사용되는 템플릿은 이러한 메세지를 렌더링해야 한다. 플라스크는 get_flashed_messages() 함수를 이용하여 템플릿에서 메시지를 추출하고 렌더링하도록 한다.
+
+```python
+#base.html
+{% block content %}
+
+```
+
+
+
+
+
 
 
 # 2.Flask 확장
@@ -413,6 +450,21 @@ WTForms에서 지원하는 표준 HTML 필드의 리스트
 | Required    | 필드에서 빈 입력을 허용하지 않는다                           |
 | URL         | URL을 검증                                                   |
 | Regexp      | 정규표현식에 대한 입력을 검증                                |
+
+
+
+## Flask-SQLAlchemy
+
+Flask-SQLAlchemy는 플라스크 애플리케이션 안에 있는 SQLAlchemy의 사용을 간단하게 하는 플라스크 확장이다. SQLAlchemy는 여러 데이터베이스 백엔드를 지원하는 강력한 관계형 데이터베이스 프레임워크다.
+
+
+
+| 데이터베이스 엔진 | URL                                           |
+| ----------------- | --------------------------------------------- |
+| MySQL             | mysql://username:password@hostname/database   |
+| Postgre           | postgre://username:password@hostname/database |
+| SQLite(리눅스)    | sqlite:////absolute/path/to/database          |
+| SQLite(윈도우)    | sqlite:///c:/absolute/path/to/database        |
 
 
 
