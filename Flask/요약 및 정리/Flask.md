@@ -459,18 +459,7 @@ Flask-SQLAlchemy는 플라스크 애플리케이션 안에 있는 SQLAlchemy의 
 
 
 
-| 데이터베이스 엔진 | URL                                           |
-| ----------------- | --------------------------------------------- |
-| MySQL             | mysql://username:password@hostname/database   |
-| Postgre           | postgre://username:password@hostname/database |
-| SQLite(리눅스)    | sqlite:////absolute/path/to/database          |
-| SQLite(윈도우)    | sqlite:///c:/absolute/path/to/database        |
-
-
-
-
-
-
+> SQLAlchemy에 관한 사항은 내용이 많은 지라 'Flask-Database' 게시물에 따로 작성해 두었습니다. 
 
 
 
