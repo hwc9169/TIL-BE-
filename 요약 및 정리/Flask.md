@@ -300,22 +300,65 @@ flash()를 호출하는 것만으로는 메시지를 출력하기에 충분하�
 ```
 
 
-
-
-
-
-
 # 02. Flask 확장
 
 플라스크는 확장할 수 있도록 설계되었다. 데이터베이스 사용자 인증 등과 같은 기능을 확장 가능하다.
 
-플라스크를 위해 특별히 개발된 확장은 flask.ext 네임스페이스에 나타나 있다.
+플라스크를 위해 특별히 개발된 확장은 flask_<네임스페이스>에 나타나 있다.
 
 
 
+## 1. Flask-Script 확장
+
+Flask-Script는 플라스크 애플리케이션에 커맨드 라인 parser를 추가하는 플라스크 확장이다. 일반적인 목적의 옵션으로 패키징되며 커스텀 커맨드도 제공한다.
+
+Manager는 클래스이다. Manager 클래스를 익스포트 하는데 이것은 flask_script에서 임포트된다.
+
+```python
+from flask_script import Manager
+from flask import Flask
+
+app = Flask(__name__)
+manager = Manager(app)
+
+if __name__=='__main__':
+    manager.run()
+```
 
 
-## 1. Bootstrap
+
+Manager의 메인 클래스의 인스턴스는 어플리케이션 인스턴스(app)를 생성자에 인수로 넘김으로 초기화된다.
+
+그리고 생성된 오브젝트는 각 확장에 따라 적절하게 사용된다.
+
+이 경우 서버 스타트업은 manager.run()을 통해 라우트되며 커맨드 라인은 파싱된다.
+
+
+
+또 유용한 기능으로는 스크립트에 자동으로 임포트 하도록 할 수 있다는 점이다. 
+
+```python
+def make_shell_context():
+    return dict(app=app, db=db, User=User)
+
+manager.add_command('shell', Shell(make_context=make_shell_context))
+```
+
+
+
+* shell : 애플리케이션의 컨텍스트에서 파이썬 쉘 세션을 시작한다
+
+* runserver : 웹 서버를 실행한다
+
+  ```
+  python hello.py runserver	
+  ```
+
+  
+
+
+
+## 2. Flask-Bootstrap 확장
 
 bootstrap은 트위터에서 제공하는 오픈 소스 프레임워크이며 매력적인 웹 페이지를 생성할 수 있도록 사용자 인터페이스 컴포넌트를 제공한다.
 
@@ -364,43 +407,7 @@ from flask_bootstrap import Bootstrap
 
 
 
-## 2. Manager
-
-Manager는 클래스이다. Manage 클래스를 익스포트 하는데 이것은 flask_script에서 임포트된다.
-
-```python
-from flask_script import Manager
-from flask import Flask
-
-app = Flask(__name__)
-manager = Manager(app)
-
-if __name__=='__main__':
-    manager.run()
-    app.run(debug=True)
-```
-
-
-
-Manager의 메인 클래스의 인스턴스는 어플리케이션 인스턴스(app)를 생성자에 인수로 넘김으로 초기화된다.
-
-그리고 생성된 오브젝트는 각 확장에 따라 적절하게 사용된다.
-
-이 경우 서버 스타트업은 manager.run()을 통해 라우트되며 커맨드 라인은 파싱된다.
-
-
-
-* shell : 애플리케이션의 컨텍스트에서 파이썬 쉘 세션을 시작한다
-
-* runserver : 웹 서버를 실행한다
-
-  ```
-  python hello.py runserver	
-  ```
-
-  
-
-## 3. Form 처리
+## 3. Flask-WTF
 
 플라스크는 폼을 처리하기 위해서 Flask-WTF 확장을 사용하여 처리한다.
 
@@ -452,6 +459,21 @@ WTForms에서 지원하는 표준 HTML 필드의 리스트
 | Regexp      | 정규표현식에 대한 입력을 검증                                |
 
 
+### 크로스-사이트 리퀘스트 위조(CSRF) 보호
+
+기본적으로 Flask-WTF는 크로스 사이트 리퀘스트 위조(CSRF) 공격으로부터 모든 폼을 보호한다.
+CSRF 공격은 악의적 웹사이트에서 희생자가 로그인한 다른 웹사이트로 리퀘스트를 전송할 때 일어난다.
+CSRF 보호를 구현하기위해 Flask-WTF는 암호화 키로 토큰을 생성하여 리퀘스트 인증을 검증하는 데 사용한다. 
+아래 예제는 암호화 키를 설정하는 방법이다.
+
+```python
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'hard to guess string'
+```
+
+
+
+추가적으로 중요한 개념이 있는데 app.config 딕셔너리는 프레임워크나 확장 또는 애플리케이션 자체에서 사용된다. app.config 딕셔너리는 설정 변수들을 저장하는 공간이다. 설정 변수들은 딕셔너리 문법에 따라 app.config 오브젝트에 추가된다. 심지어 app.config(설정 오브젝트)는 파일이나 환경에서 설정값을 불러오는 메소드도 가지고 있다.
 
 ## 4. Flask-SQLAlchemy
 
@@ -463,7 +485,7 @@ Flask-SQLAlchemy는 플라스크 애플리케이션 안에 있는 SQLAlchemy의 
 
 
 
-## 5. Flask-Mail
+## 5. Flask-Mail 확장
 
 Flask-Mali 확장자는 smtplib를 래퍼하여 플라스크에서 쉽게 사용되도록 통합되어 있다.
 
@@ -524,7 +546,54 @@ def send_email(to, subject, template, **kwargs):
 
 
 
+## 6. Flask_Moment 확장
 
+웹 애플리케이션에서 날짜와 시간을 처리할 때 사용자가 전 세계에서 사용한다면 서로 다른 시간대를 사용하기 때문에 처리가 복잡해진다. 서버는 각 사용자의 위치와 무관한 일정한 시간 단위인 협정세계시(Coordinated Universal Time, UTC) 를 사용한다. 그러나 사용자는 UTC로 표현된 시간이 이해하기 힘들기 때문에 자신의 거주 위치에 맞는 지역 시간으로 표현하여야 한다. Flask_Moment 확장은 브라우저에서 시간과 날짜를 렌더링하도록 하는 moment.js와 Jinja2 템플릿이 통합된 플라스크 애플리케이션용 확장이다. 
+
+Flask-Moment 초기화
+
+```python
+form flask_moment import Moment
+moment = Moment(app)
+```
+
+Flask-Moment는 moment.js 외에도 jquery.js가 필요하다. 이 두 라이브러리는 HTML 문서 어디에 위치해도 상관없다. 확장으로 제공되는 헬퍼 함수를 통해 사용될 수도 있다. 이 헬퍼 함수는 콘텐트 딜리버리 네트워크(Content Delivery Network, CDN)에서 위의 두 라이브러리의 테스트된 버전을  참조한다. 부트스트랩은 이미 jquery.js를 포함하고 있기 때문에, moment.js만 추가하면 된다. 
+
+moment.js 라이브러리 임포트
+
+```html
+{% block scrips %}
+{{ super() }}
+{{ moment.include_moment()}}
+{% endblock %}
+```
+
+
+
+타임스탬프를 사용하기 위해 Flask-Moment는  moment 클래스를 생성한다.(이는 템플릿에서도 사용 가능하다.)  그렇다면 예제를 바로 살펴봅시다.
+
+flask-moment 사용 예제, hello.py: datetime 변수 추가
+
+```python
+from datetime import datetime
+
+@app.route('/')
+def index():
+    return render_template('index.html', current_time=datetime.utcnow())
+```
+
+flask-moment 사용 예제, templates/index.html: Flask-Moment를 이용한 타임스탬프 랜더링
+
+```html
+{% extends "base.html" %}
+{% block page_content %}
+	<p>The local Date and time is {{ moment(current_time).format('LLL') }}.</p>
+	<p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
+{% endblock %}
+```
+
+format('LLL') 포맷은 클라이언트 컴퓨터에 설정된 시간대와 위치에 따라 날짜와 시간을 랜더링하고,
+fromNow() 랜더링 스타일은 상대 타임스탬프를 랜더링하고 넘겨진 시간에 따라 자동을 리프레시한다. 
 
 
 
