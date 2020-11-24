@@ -23,7 +23,7 @@ ORM덕분에 파이썬의 SQLAlchemy을 다룰줄만 알면 서로 다른 문법
 
 | 옵션        | 설명                                                         |
 | ----------- | ------------------------------------------------------------ |
-| filter()    | 원래  쿼리에 추가 필터를 더한 새로운 쿼리를 리턴한다.        |
+| filter()    | 원래 쿼리에 추가 필터를 더한 새로운 쿼리를 리턴한다.        |
 | filter_by() | 원래 쿼리에 추가된 동일한 필터를 더한 새로운 쿼리를 리턴한다. |
 | limit()     | 원래 쿼리의 결과 수를 주어진 수만큼 제한한다.                |
 | offset()    | 원래 쿼리의 결과의 리스트에 옵셋을 적용하는 새로운 쿼리를 리턴한다. |
@@ -56,7 +56,7 @@ from flask import Flask
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = False
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = False #True로 설정시 각 리퀘스트 끝에 데이터베이스의 견경을 자동 커밋한다.
 app.config['SECRET_KEY'] = 'hard to guess string'
 
 db = SQLAlchemy(app)
@@ -108,8 +108,29 @@ db.session.commit()
 ```
 
 
+4. 관계
+```python
+class Role(db.Model):
+    users = db.relationship('User', backref='role')
 
-4. 쿼리 실행
+class User(db.Model):
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+```
+db.relationship의 경우 외래키로는 어떤 열을 사용할지 결정할 수 없는 상황이 발생할 수 있다. 예를 들어 User 모델이 Role 외래키로 정의된 두 개의 열을 갖는다면, SQLAlchemy는 두 개 중 어떤 것을 사용할지 알지 못한다. 이런 경우  db.relationship()에 옵션을 사용하면 된다. 
+
+일반적인 설정 옵션
+| 옵션 이름 | 설명                          |
+|-----------|------------------------------|
+|backref    |백 레퍼런스 추가               |
+|primaryjoin|두 모델 사이의 join 조건을 설정 |
+|lazy|관계된 아이템이 로드되는 방식을 설정한다. select(첫번째 액세스시 아이템 로드), immediate(오브젝트 로드시 아이템 로드), joined(조인으로 즉시 로드), subquery(서브쿼리로 즉시 로드), noload(절대 로드되지 않음), dynamic(아이템이 아니라 쿼리가 로드됨)|
+|uselist|False로 설정하면 리스트 대신 스칼라를 사용한다|
+|order_by|아이템 사용되는 순서 결정|
+|secondary|다대다 관계에서 관계 테이블의 이름 설정|
+|secondaryjoin|SQLAlchemy가 결정하지 못할 때 두 번째 조인 설정|
+
+
+5. 쿼리 실행
 
 ```python
 User.query.all()
@@ -121,7 +142,8 @@ User.query.filter_by(role=user_role).all()
 user_role.user.filter_by(name='susan'),first()
 # <User 'susan'>
 ```
-
+ filter_by와 같은 필터는 쿼리 오브젝트(user.query)에서 호출되며 새로 정의된 쿼리를 리턴한다.
+ 다중 필터는 설정한 만큼 순차적으로 호출하여 쿼리를 반환한다.
 
 
 5. 행 수정 및 삭제
