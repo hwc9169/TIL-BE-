@@ -281,9 +281,9 @@ def index():
         if old_name is not None and old_name != form.name.data:
             flash("You have changed your name")
         session['name'] = form.name.data
-        session['email'] = form.email.data
+        form.name.data = ''
         return redirect(url_for('index'))
-    return render_template('index.html',form = form, name = session.get('name'), email = session.get('email'))
+    return render_template('index.html',form = form, name = session.get('name'))
 
 ```
 
@@ -296,327 +296,32 @@ flash()를 호출하는 것만으로는 메시지를 출력하기에 충분하�
 ```python
 #base.html
 {% block content %}
-
-```
-
-
-
-# 02. 사용자 세선
-
-폼을 통해 서브밋하고 브라우저에서 새로고침을 누르면 브라우저에서 경고 메시지를 띄운다. 이러한 현상은 브라우저에서 페이지를 새로고침을 하면 가장 마지막에 보낸 리퀘스트를 반복하게 되는데, 폼 데이터를 갖는 POST 리퀘스트일 때, 폼 서브미션을 두 번하게 되는 문제가 생긴다. 이는 Post 리퀘스트에 대한 응답을 redirect로 하면 마지막에 사용자가 보낸 리퀘스트는 GET이 된다.(redirect는 항상 GET 리퀘스트만 발생시킨다.) 이러한 기법을 Post/Redirect/Get pattern이라 한다.
-
-이러한 기법을 사용하려면 사용자 세션을 사용하여야한다. 왜냐하면 post 데이터가 리다이렉트 되면서 지워지기 때문이다.
-
-> 사용자 세션은 클라이언트 측 쿠키에 저장된다. 이 세션은 설정 변수인 SECRET_KEY로 암호화되어 있다. 쿠키가 임의로 변경되면 세션은 무효화된다.
-
-```python
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    form = NameForm()
-    if form.validate():
-        session['name'] = form.name.data
-        return redirect(url_for('index'))
-    return render_template('index.html', form=form, name=session.get('name'))
-```
-
-
-
-# 02. Flask 확장
-
-플라스크는 확장할 수 있도록 설계되었다. 데이터베이스 사용자 인증 등과 같은 기능을 확장 가능하다.
-
-플라스크를 위해 특별히 개발된 확장은 flask_<네임스페이스>에 나타나 있다.
-
-
-
-## 1. Flask-Script 확장
-
-Flask-Script는 플라스크 애플리케이션에 커맨드 라인 parser를 추가하는 플라스크 확장이다. 일반적인 목적의 옵션으로 패키징되며 커스텀 커맨드도 제공한다.
-
-Manager는 클래스이다. Manager 클래스를 익스포트 하는데 이것은 flask_script에서 임포트된다.
-
-```python
-from flask_script import Manager
-from flask import Flask
-
-app = Flask(__name__)
-manager = Manager(app)
-
-if __name__=='__main__':
-    manager.run()
-```
-
-
-
-Manager의 메인 클래스의 인스턴스는 어플리케이션 인스턴스(app)를 생성자에 인수로 넘김으로 초기화된다.
-
-그리고 생성된 오브젝트는 각 확장에 따라 적절하게 사용된다.
-
-이 경우 서버 스타트업은 manager.run()을 통해 라우트되며 커맨드 라인은 파싱된다.
-
-
-
-또 유용한 기능으로는 스크립트에 자동으로 임포트 하도록 할 수 있다는 점이다. 
-
-```python
-def make_shell_context():
-    return dict(app=app, db=db, User=User)
-
-manager.add_command('shell', Shell(make_context=make_shell_context))
-```
-
-
-
-* shell : 애플리케이션의 컨텍스트에서 파이썬 쉘 세션을 시작한다
-
-* runserver : 웹 서버를 실행한다
-
-  ```
-  python hello.py runserver	
-  ```
-
-  
-
-
-
-## 2. Flask-Bootstrap 확장
-
-bootstrap은 트위터에서 제공하는 오픈 소스 프레임워크이며 매력적인 웹 페이지를 생성할 수 있도록 사용자 인터페이스 컴포넌트를 제공한다.
-
-부트스트랩과 어플리케이션을 통합하는 가장 확실한 방법은 템플릿에 모든 변경 사항들을 만들어 두는 것이다.
-
-더 간단한 방법은 Flask-Bootstrap이라는 Flask확장을 사용한다.
-
-```python
-from flask_bootstrap import Bootstrap
-```
-
-> Flask-Bootstrap의 base 템플릿을 상속한 예제
-
-```html
-
-{% extends "bootstrap/base.html" %}
-{% block title %} Flasky {% endblock %}
-{% block navbar %}
-<div class="navbar navbar-inverse" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle"
-            data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">Flasky</a>
-        </div>
-        <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li><a href="/">Home</a></li>
-            </ul>
-        </div>
-    </div>
-</div>
-{% block content %}
 <div class="container">
-    <div class="page-header">
-        <h1>Hello, {{name}}!</h1>
-    </div>
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-warning">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% block page_content %}{% endblock %}
 </div>
 {% endblock %}
+
 ```
 
+## 10. 블루 프린트
+애플리케이션 인스턴스를 팩토리 함수로 생성하면, 전역 변수가 아니기 때문에 app.route() 데코레이터를 쉽게 정의할 수 없다. 이러한 문제는 Blueprints를 사용하면 된다. 블루프린트는 app과 같은 기능을 가지고 있다. 그리고 블루프린트는 애플리케이션에 등록할 수 있는데, 등록될 때까지 휴면 상태다. 전역 변수로 정의된 블루프린트를 하나의 스크립트로된 애플리케이션과 거의 같은 방법으로 사용된다.
 
-
-## 3. Flask-WTF
-
-플라스크는 폼을 처리하기 위해서 Flask-WTF 확장을 사용하여 처리한다.
-
-Flask-WTF를 사용할 때 각 웹 폼은 Form 클래스로부터 상속한 클래스에 의해  표현된다.
-
-이 클래스는 폼에 있는 필드의 리스트를 정의하는데 이는 각각 오브젝트로 표현된다.
-
-각 오브젝트는 하나 이상의 검증자가 있어서 사용자가 서브밋한 입력값이 올바른지 체크할 수 있다. 
-
-
+애플리케이션과 비슷하게, 블루프린트는 하나의 파일에 정의될 수도 있고 패키지를 사용하여 구조화할 수도 있다. 호환성을 높이려면 애플리케이션 패키지 내부에 서브 패키지가 블루프린트를 호스트하도록 생성하면 된다. 아래는 블루프린트를 생성하는 예제다
 
 ```python
-from flask_wtf import Form
-from wtforms import StringField, SubmitField
-from wtforms.validators import Required
+from flask import Blueprint
 
-class NameForm(Form):
-    name = StringField('What is your name?', validators=[Required()])
-	submit = SubmitField('Submit')
+main = Blueprint('main', __name__)
+
+from . import views. erros
 ```
 
+Blueprint 클래스의 생성자는 두 개의 인수를 필요로 한다. 하나는 블루프린트 이름이고 다른 하나는 블루프린트가 위치한 모듈이나 패키지다. \_\_name\_\_ 변수를 사용하면 대부분의 경우 잘 작동한다.
 
-
-WTForms에서 지원하는 표준 HTML 필드의 리스트 
-
-| 필드타입      | 설명                                      |
-| ------------- | ----------------------------------------- |
-| StringField   | 텍스트 필드                               |
-| TextAreaField | 다중 라인 텍스트 필드                     |
-| PasswordField | 패스워드 텍스트 필드                      |
-| Hiddenfield   | 숨겨진 텍스트 필드                        |
-| DateField     | 주어진 포맷에서 datetime.date 값을 받는다 |
-| BooleanField  | True와 False 값을 갖는 체크박스           |
-| FileField     | 파일 업로드 필드                          |
-| SubmitField   | 폼 서브미션 버튼                          |
-| IntegerField  | 정수값을 받는 텍스트 필드                 |
-
-
-
-| 검증자      | 설명                                                         |
-| ----------- | ------------------------------------------------------------ |
-| Email       | 이메일 주소를 검증                                           |
-| EqualTo     | 두 필드의 값을 비교, 확인하기 위해 패스워드를 두번 입력하도록 할때 유용 |
-| Length      | 문자열의 길이 검증                                           |
-| NumberRange | 입력한 값이 숫자와 알파벳 범위인지를 검증                    |
-| Optional    | 필드에서 빈 입력을 허용하고, 추가한 검증자를 건너뛴다        |
-| Required    | 필드에서 빈 입력을 허용하지 않는다                           |
-| URL         | URL을 검증                                                   |
-| Regexp      | 정규표현식에 대한 입력을 검증                                |
-
-
-### 크로스-사이트 리퀘스트 위조(CSRF) 보호
-
-기본적으로 Flask-WTF는 크로스 사이트 리퀘스트 위조(CSRF) 공격으로부터 모든 폼을 보호한다.
-CSRF 공격은 악의적 웹사이트에서 희생자가 로그인한 다른 웹사이트로 리퀘스트를 전송할 때 일어난다.
-CSRF 보호를 구현하기위해 Flask-WTF는 암호화 키로 토큰을 생성하여 리퀘스트 인증을 검증하는 데 사용한다. 
-아래 예제는 암호화 키를 설정하는 방법이다.
-
-```python
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'hard to guess string'
-```
-
-
-
-추가적으로 중요한 개념이 있는데 app.config 딕셔너리는 프레임워크나 확장 또는 애플리케이션 자체에서 사용된다. app.config 딕셔너리는 설정 변수들을 저장하는 공간이다. 설정 변수들은 딕셔너리 문법에 따라 app.config 오브젝트에 추가된다. 심지어 app.config(설정 오브젝트)는 파일이나 환경에서 설정값을 불러오는 메소드도 가지고 있다.
-
-## 4. Flask-SQLAlchemy
-
-Flask-SQLAlchemy는 플라스크 애플리케이션 안에 있는 SQLAlchemy의 사용을 간단하게 하는 플라스크 확장이다. SQLAlchemy는 여러 데이터베이스 백엔드를 지원하는 강력한 관계형 데이터베이스 프레임워크다.
-
-
-
-> SQLAlchemy에 관한 사항은 내용이 많은 지라 'Flask-Database' 게시물에 따로 작성해 두었다. 
-
-
-
-## 5. Flask-Mail 확장
-
-Flask-Mali 확장자는 smtplib를 래퍼하여 플라스크에서 쉽게 사용되도록 통합되어 있다.
-
-파이썬 표준 라이브러리에서 제공하는 smtplib 패키지는 플라스크 애플리케이션에서 이메일을 전송하는 데 사용된다. (Simple Mail Transfer Protocol, SMTP , 메일 전송 프로토콜)
-
-
-
-SMTP서버 설정키
-
-| 키            | 기본값    | 설MAI                                  |
-| ------------- | --------- | -------------------------------------- |
-| MAIL_HOSTNAME | localhost | 호스트 이름 혹은 이메일 서버의  IP주소 |
-| MAIL_PORT     | 25        | 이메일 서버의 포트                     |
-| MAIL_USE_TLS  | False     | 전송 레이어 보안(TLS)의 보안 활성화    |
-| MAIL_UEE_SSL  | False     | 보안 소켓 레이어(SSL)의 보안 활성화    |
-| MAIL_USERNAME | None      | 메일 계정의 사용자이름                 |
-| MAIL_PASSWORD | None      | 메일 계정의 패스워드                   |
-
-* 설정을 하지않고 서버에 연결하면 localhost의 25번 포트에 사용자 인증 없이 이메일을 전송한다.
-
-
-
-외부 SMTP서버 연결
-
-```python
-import os
-​```
-app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-```
-
-
-
-Flask-Mail 초기화  및 이메일 전송
-
-```python
-from flask_mail import Mail
-​```
-
-mail = Mail(app)
-
-from flask_mail import Message
-
-app.config['FLASKY_MAIL_SUBJECT_PREFIX'] = '[Flasky]'
-app.config['FLASKY_MAIL_SENDER'] = 'Flasky Admin <flasky@example.com>'
-
-def send_email(to, subject, template, **kwargs):
-    msg = Message(app.config['FLASKY_MAIL_SUBJECT_PREFIX']+subject,sender=app.config['FLASKY_MAIL_SENDER'],recipients=[to])
-    #Message(title, sender, recipient)
-    
-    msg.body = render_template(template+'.txt',**kwargs)
-    msg.html = render_template(template+'.html',**kwargs)
-    mail.send(msg)
-```
-
-
-
-## 6. Flask_Moment 확장
-
-웹 애플리케이션에서 날짜와 시간을 처리할 때 사용자가 전 세계에서 사용한다면 서로 다른 시간대를 사용하기 때문에 처리가 복잡해진다. 서버는 각 사용자의 위치와 무관한 일정한 시간 단위인 협정세계시(Coordinated Universal Time, UTC) 를 사용한다. 그러나 사용자는 UTC로 표현된 시간이 이해하기 힘들기 때문에 자신의 거주 위치에 맞는 지역 시간으로 표현하여야 한다. Flask_Moment 확장은 브라우저에서 시간과 날짜를 렌더링하도록 하는 moment.js와 Jinja2 템플릿이 통합된 플라스크 애플리케이션용 확장이다. 
-
-Flask-Moment 초기화
-
-```python
-form flask_moment import Moment
-moment = Moment(app)
-```
-
-Flask-Moment는 moment.js 외에도 jquery.js가 필요하다. 이 두 라이브러리는 HTML 문서 어디에 위치해도 상관없다. 확장으로 제공되는 헬퍼 함수를 통해 사용될 수도 있다. 이 헬퍼 함수는 콘텐트 딜리버리 네트워크(Content Delivery Network, CDN)에서 위의 두 라이브러리의 테스트된 버전을  참조한다. 부트스트랩은 이미 jquery.js를 포함하고 있기 때문에, moment.js만 추가하면 된다. 
-
-moment.js 라이브러리 임포트
-
-```html
-{% block scrips %}
-{{ super() }}
-{{ moment.include_moment()}}
-{% endblock %}
-```
-
-
-
-타임스탬프를 사용하기 위해 Flask-Moment는  moment 클래스를 생성한다.(이는 템플릿에서도 사용 가능하다.)  그렇다면 예제를 바로 살펴봅시다.
-
-flask-moment 사용 예제, hello.py: datetime 변수 추가
-
-```python
-from datetime import datetime
-
-@app.route('/')
-def index():
-    return render_template('index.html', current_time=datetime.utcnow())
-```
-
-flask-moment 사용 예제, templates/index.html: Flask-Moment를 이용한 타임스탬프 랜더링
-
-```html
-{% extends "base.html" %}
-{% block page_content %}
-	<p>The local Date and time is {{ moment(current_time).format('LLL') }}.</p>
-	<p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
-{% endblock %}
-```
-
-format('LLL') 포맷은 클라이언트 컴퓨터에 설정된 시간대와 위치에 따라 날짜와 시간을 랜더링하고,
-fromNow() 랜더링 스타일은 상대 타임스탬프를 랜더링하고 넘겨진 시간에 따라 자동을 리프레시한다. 
-
-
-
-
-
+라우트는 다른 스크립트에 정의한 후(app/main/views.py) 이 모듈들을 임포트하여 블루프린트와 연결하면된다. 원형의존성을 피하기 위해 모듈을 app/\_\_init__/py 아랫부분에 임포트해야 한다. views.py와 errors.py는 메인 블루프린트를 임포트해야 되기 때문이다. 
