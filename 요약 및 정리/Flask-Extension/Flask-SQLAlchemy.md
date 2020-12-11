@@ -41,10 +41,42 @@ ORM덕분에 파이썬의 SQLAlchemy을 다룰줄만 알면 서로 다른 문법
 | first_or_404() | 쿼리의 첫 번째 결과를 리턴하거나 결과가 없다면 404 에러를 전송 |
 | get()          | 주어진 주요키에 매칭하는 행을 리턴하거나 결과가 없다면 None을 리턴 |
 | get_or_404()   | 주어진 주요키에 매칭하는 행을 리턴하거나 결과가 없다면 404 에러를 전송 |
-| count()        | 쿼리의 결과 카운트 리턴ㄴ                                    |
+| count()        | 쿼리의 결과 카운트 리턴                                  |
 | paginate()     | 결과의 특정 영역을 포함하는 Pagination 오브젝트 리턴         |
 
 
+### Paginate
+paginate 쿼리 실행자는 페이지 단위로 게시물 혹은 컨텐츠들을 보여주기 위해 사용된다. 먼저 예제를 살펴보자
+```python
+@main.route('/', methods=['GET', 'POST'])
+def index():
+    #...
+    page = request.args.get('page', type=int)
+    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(page, per_page=20, error_out=False)
+    posts = pagination.items
+    return render_templates('index.html', form=form, posts=posts, pagination=pagination)
+```
+
+paginate()의 리턴값은 Pagination 클래스의 오브젝트인데 이 클래스는 Flask-SQLAlchemy에 정의되는 것으로 페이지 링크를 생성할 때 유용한 속성을 가지고 있다.
+Pagination 오브젝트의 속성을 정리했다
+| 속성 | 설명|
+|--------|--------|
+|itmes|현재 페이지의 레코드|
+|query|페이지네이션의 쿼리|
+|page|현재 페이지 넘버|
+|prev_num|이전 페이지 넘버|
+|next_num|다음 페이지 넘버|
+|has_prev|이전 페이지가 있으면 True|
+|has_next|다음 페이지가 있으면 True|
+|pages|쿼리에 대한 페이지 갯수|
+|per_page|페이지당 아이템 수|
+|total|쿼리에 대한 전체 아이템 수|
+
+| 메소드 | 설명|
+|--------|--------|
+|iter_pages(left_edge, left_current, right_edge, right_current)|페이지네이션 위젯에서 보이기 위해 페이지 넘버의 순서를 리턴하는 이터레이터|
+|prev()|이전 페이지의 페이지네이션 오브젝트|
+|next()|다음 페이지의 페이지네이션 오브젝트|
 
 ## 1. 기본 사용법
 
@@ -146,7 +178,7 @@ user_role.user.filter_by(name='susan'),first()
  다중 필터는 설정한 만큼 순차적으로 호출하여 쿼리를 반환한다.
 
 
-5. 행 수정 및 삭제
+6. 행 수정 및 삭제
 
 ```python
 #수정
