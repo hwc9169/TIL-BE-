@@ -5,7 +5,7 @@
 3. 새로운 기능으로 인해 애플리케이션의 동작이 달라질 수 있다. 모든 유닛 테스트는 기존 코드가 회귀되지 않음을 보장한다. 다른 말로 하면, 유닛 테스트가 성공했다는 말은 새 변경 사항이 기존 코드에 영향을 주지 않는다는 말이다. ㅊ 
 
 ## Unittest
-unittest는 플라스크를 테스트하기위해 사용되는 라이브러리다. unittest를 사용할 때는 unittest.TestCase를 상속하는 클래스를 만들어야한다. 그리고 각 메소드는 'test_'로 시작되어야한다. 
+unittest는 플라스크를 테스트하기위해 사용되는 라이브러리다. unittest를 사용할 때는 unittest.TestCase를 상속하는 클래스를 만들어야한다. 그리고 각 메소드는 'test_'로 시작되어야한다.
 
 ```python
 from app import create_app, db
@@ -41,6 +41,24 @@ setUp() 메소드와 tearDown() 메소드는 unittest.TestCase 메소드를 오�
 6. tearDown()
 
 manage.py를 이용하여 테스트하는 코드다. 테스트 코드를 탐색은 TestLoader().discover()에 구현되어 있다. 또한 실행은 TextTestRunner 객체의 run() 메서드를 사용하면 된다.
+
+- unittest에 포함된 주요 개념
+    - TestCase: unittest 프레임 워크의 테스트 기본 단위
+    - Fixture: 
+        - 테스트 함수 전과 후에 실행
+        - 테스트 전에 테스트 환경을 체크
+        - 테스트 전에 데이터베이스 테이블을 만들거나, 테스트 후 리소스 정리하는데 사용
+    - assertion:
+        - unittest가 테스트 통과 여부를 결정
+        - bool, 객체, 예외 등 다양한 점검 가능
+        - assertion이 실패하면 테스트 함수가 실해
+
+### unittest 모듈 사용
+- unittest.TestCase 클래스를 상속
+- test_ 로 시작하는 메소드는 모두 테스트 메솓
+- test_run() 메소드는 실행 여부만 판별
+- unittest.main()로 테스트 수행
+
 ``` python 
 @manager.command
 def test():
