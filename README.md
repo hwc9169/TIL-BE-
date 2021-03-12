@@ -15,6 +15,6 @@
 # Go
 flask를 이용해서 대동여지도라는 큰 프로젝트를 경험했다.
 어느정도의 백엔드 흐름을 이해했다 이제는 내가 공부해야할 것은 백엔드의 신기술들
-GraphQL, gRPC, MSA 그리고 DevOps에 관한 공부 Docker, k8s, Nginx, CI/CD
+GraphQL, gRPC, MSA 그리고 DevOps에 관한 공부 Docker, k8s, Nginx, CI/CD,
 최종적으로 인공지능이였다. 예전에 문법을 조금 공부하고 넘어갔던 MSA에 최적화된 
 Go언어를 2021년 3월 다시 시작한다.
